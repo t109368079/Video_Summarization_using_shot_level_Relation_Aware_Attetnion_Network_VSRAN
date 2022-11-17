@@ -8,7 +8,7 @@ In this research, we propose a pipeline for shot-based video summarization. Shot
 For full paper, please click [here](https://drive.google.com/file/d/1x19kPrfBahyvyxVpSuSxNnSgmF-JUbyw/view?usp=share_link).
 
 ## Extracted Feature h5 files Download Link
-Please download the pre-extracted feature h5 files using this [link]().
+Please download the pre-extracted feature h5 files using this [link](![](https://i.imgur.com/q3INdCQ.png)).
 
 ### Directory tree
 
