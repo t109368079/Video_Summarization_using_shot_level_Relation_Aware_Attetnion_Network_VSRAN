@@ -1,0 +1,55 @@
+# environment
+device: 'cuda:0'
+seed: 777
+is_verbose: True
+
+# dataloader
+augment_dataset_path : ['./datasets/summe_goo3DRes_shot_center.h5', './datasets/tvsum_goo3DRes_shot_center.h5']
+test_dataset_path: './datasets/cosum_goo3DRes_shot_center.h5'
+
+shot_repre: "center"
+batch_size: 1
+shuffle: True
+eval_mode: "max"
+fixed_summary_length: True
+split_file_path: './split_folder/coSum_0714_split.json'
+master_metric: 'MSE'                             # f1_score / mAP / kendall / MSE
+mAP_top: 5
+
+
+# h5 Attribute
+major_feature_name: 'major_features'
+minor_feature_name: 'minor_features'
+gt_name: 'gt_score'
+user_summaries_name: 'summaries'                      # summaries / greedy_summaries
+
+
+
+# optimizer
+learning_rate: 0.00001
+l2_regularization: 0.00001
+
+# trainer
+epoches: 100
+
+# model
+dimension_major: 2048
+dimension_minor: 1024
+dimension_hidden: 512
+dropout_rate: 0.5
+max_relative_distance: 5
+n_stacks: 1
+pe: 'spe'
+
+# Save model 
+save_model: False
+save_model_path: "./save_model/{}_split_{}.pth"
+
+# Key-shot selection Method, knapsack(Maximize total score) or greedy(Select the highest until full)
+key_shot_selection: "greedy"
+
+# Report Text
+report_text: "Summe Augment Center Motion & Static Shot Feature"
+report_path: "./report_folder/1027_CoSum_Augment.txt"
+score_dir: "./save_score"
+
