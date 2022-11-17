@@ -64,6 +64,40 @@ VSRAN
 2. Run python Augment_main.py
 
 ## Result
-### 
+
+### Score Prediction based evaluation
+1. Kendall coefficient   
+2. Spearman coefficient   
+3. mAP
+ 
+#### SumMe Dataset
+| Method \ Metrics |  Kendall  | Spearman  |
+|:---------------:|:---------:|:---------:|
+|     Random      |    0.0    |    0.0    |
+|     DR-DSN      |   0.047   |   0.048   |
+|      RSGN       |   0.083   |   0.085   |
+| Proposed VSRAN  | **0.104** | **0.123** |
+
+#### CoSum Dataset
+| Method \ Metrics | mAP-top5  | mAP-top15 |
+|:---------------:|:---------:|:---------:|
+|       KTS       |   0.684   |   0.686   |
+|     seqDPP      |   0.692   |   0.709   |
+|     SubMod      |   0.735   | **0.745** |
+|    DeSumNet     |   0.721   |   0.736   |
+| Proposed VSRAN  | **0.792** |   0.676   |
+
+### Summary based evaluation
+#### SumMe Dataset
+|  Method \ Setting  | Standard | Transfer | Augment  |
+|:------------------:|:--------:|:--------:|:--------:|
+| Random Frame level |   41.0   |          |          |
+| Random Shot level  |   34.7   |          |          |
+|      SUM-GAN       |   41.7   |   43.6   |          |
+|       VASNet       |   43.4   |   42.5   |   41.9   |
+|        RSGN        |   45.0   |   45.7   |   44.0   |
+|      Clip-it       |   52.5   | **54.7** |   50.0   |
+|   Proposed VSRAN   | **57.7** |   45.5   | **54.7** |
+|    ground truth    |   64.7   |          |          |
 
 
