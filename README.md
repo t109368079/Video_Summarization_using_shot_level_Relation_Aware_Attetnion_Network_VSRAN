@@ -11,6 +11,37 @@ For full paper, please click [here](https://drive.google.com/file/d/1x19kPrfBahy
 Please download the pre-extracted feature h5 files using this [link](https://drive.google.com/drive/folders/1Czq5oTXvFiz6SKFdACLetxjds84nlHjY?usp=share_link).
 
 ### Directory tree
+```
+VSRAN
+├──README.md
+├──datasets (put h5 file here-recommend)
+├──split_folder
+├──models
+| ├──layer.py
+| ├──model.py
+| ├──relation_aware_attention.py
+├──utils
+| ├──config.py
+| ├──CoSum+DataLoader.py
+| ├──f1_score_metrics.py
+| ├──generate_cosum_split.py
+| ├──generate_greedy_summary.py
+| ├──kfold_split.py
+| ├──knapsack.py
+| ├──loss_metrics.py
+| ├──metrics.py
+| ├──My_Dataset.py
+| ├──video_summarization.py
+| ├──video_summarization_dataset.py
+├──main.py
+├──transfer_main.py
+├──Augment_main.py
+├──trainer.py
+├──config.yaml
+├──transfer_config.yaml
+├──augment_config.yaml
+```
+
 
 
 ## How to train in Standard Setting
@@ -33,5 +64,6 @@ Please download the pre-extracted feature h5 files using this [link](https://dri
 2. Run python Augment_main.py
 
 ## Result
+### 
 
 
