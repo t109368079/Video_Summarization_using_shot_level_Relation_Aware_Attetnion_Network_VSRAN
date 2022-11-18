@@ -91,7 +91,7 @@ VSRAN
 #### SumMe Dataset
 |  Method \ Setting  | Standard | Transfer | Augment  |
 |:------------------:|:--------:|:--------:|:--------:|
-| Random Frame level  <td spancol=3> 41.0
+| Random Frame level |   41.0   |          |          |
 | Random Shot level  |   34.7   |          |          |
 |      SUM-GAN       |   41.7   |   43.6   |          |
 |       VASNet       |   43.4   |   42.5   |   41.9   |
