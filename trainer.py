@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 
 import os
-import h5py
 import numpy as np
 import pandas as pd
 from scipy.stats import kendalltau as kendall
@@ -16,12 +15,11 @@ from sklearn.metrics import average_precision_score as mAP
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 #from torch.utils.tensorboard import SummaryWriter
-import statistics
 
-import utils.video_summarization as utils
+from utils.visualization import plot
 from utils.loss_metric import LossMetric
 from utils.f1_score_metric import F1ScoreMetric
-from utils.visualization import plot
+import utils.video_summarization as utils
 
 # 測試用
 from torch.utils.data import DataLoader
@@ -29,6 +27,7 @@ from torch.utils.data import SubsetRandomSampler
 from sklearn.metrics import average_precision_score as mAP
 
 from models.model import My_Model
+from models.my_loss import My_loss
 from utils.config import ConfigParser
 from utils.kfold_split import generate_splits, read_splits
 from utils.My_Dataset import My_VideoSummarizationDataset
@@ -56,7 +55,7 @@ class Trainer():
 
 
         self.optimizer,self.scheduler = self._initialize_optimizer()
-        self.criterion = nn.MSELoss()
+        self.criterion = My_loss(0.01)
         
         
         self.losses = LossMetric()       # Training loss for each epoch
@@ -145,10 +144,9 @@ class Trainer():
                 except:
                     continue
                 
-                loss = self.criterion(output, label)
-                loss.backward()
+                comb_loss, kendall_loss, mse_loss = self.criterion(output, label)
+                comb_loss.backward()
                 # print(loss.item())
-                
                 self.optimizer.step()
         return
 
@@ -171,8 +169,8 @@ class Trainer():
         #   except:
         #       # print(key)
         #       continue
-          loss = self.criterion(output, label)
-          loss.backward()
+          comb_loss, kendall_loss, mse_loss = self.criterion(output, label)
+          comb_loss.backward()
           self.train_loss_mean.append(loss.cpu().detach().item())
           self.optimizer.step()
            
@@ -204,7 +202,7 @@ class Trainer():
                     output, attention_weights = self.model(data)
                 except:
                     continue
-                loss = self.criterion(output, label)
+                comb_loss, kendall_loss, mse_loss = self.criterion(output, label)
                 output = output[0].cpu().numpy()    # (1 x number of downsampled frames)
                 label_np = label.detach().cpu().numpy()
                 label_np = np.reshape(label_np, (1,-1))
