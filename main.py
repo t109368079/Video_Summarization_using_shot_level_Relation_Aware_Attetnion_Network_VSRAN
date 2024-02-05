@@ -110,9 +110,9 @@ if __name__ == '__main__':
         
         max_kendall.append(trainer.kendall_bsf_fscore)
         max_spearman.append(trainer.spearman_bsf_fscore)
-        max_mse.append(trainer.bsf_mse)
+        max_mse.append(trainer.bsf_loss)
         max_mAP.append(trainer.bsf_mAP)
-        report_text += f"Split: {split_index},Best MSE: {trainer.bsf_mse}, Best Kendall: {trainer.kendall_record.get_max_epoch_mean()}, Best Spearman: {trainer.spearman_record.get_max_epoch_mean()}, Best mAP: {trainer.bsf_mAP}, "
+        report_text += f"Split: {split_index},Best MSE: {trainer.bsf_loss}, Best Kendall: {trainer.kendall_record.get_max_epoch_mean()}, Best Spearman: {trainer.spearman_record.get_max_epoch_mean()}, Best mAP: {trainer.bsf_mAP}, "
         report_text += f"Knapsack Average F1-score: {trainer.bsf_average_f1score_knapsack}, Max F1-score: {trainer.bsf_max_f1score_knapsack}, "
         report_text += f'Greedy Average F1-scpre: {trainer.bsf_average_f1score_greedy}, Max F1-score: {trainer.bsf_max_f1score_greedy}\n'
         split_result_table = trainer.result_table

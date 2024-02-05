@@ -55,11 +55,15 @@ class Trainer():
 
 
         self.optimizer,self.scheduler = self._initialize_optimizer()
-        self.criterion = My_loss(0.01)
-        
-        
-        self.losses = LossMetric()       # Training loss for each epoch
-        self.test_losses = LossMetric()  # Testing loss for each epoch
+        self.criterion = My_loss(config.alpha)
+
+        self.training_com_losses = LossMetric()
+        self.training_ken_losses = LossMetric()
+        self.training_mse_losses = LossMetric()
+        self.testing_com_losses = LossMetric()
+        self.testing_ken_losses = LossMetric()
+        self.testing_mse_losses = LossMetric()
+
         self.max_f1_scores_knapsack = F1ScoreMetric()
         self.average_f1_scores_knapsack = F1ScoreMetric()
         self.max_f1_scores_greedy = F1ScoreMetric()
@@ -86,7 +90,7 @@ class Trainer():
         self.bsf_max_f1score_greedy_std = 0
         self.bsf_average_f1score_greedy = 0
         self.bsf_average_f1score_greedy_std = 0
-        self.bsf_mse = 0
+        self.bsf_loss = 0
         self.bsf_mAP = 0
         self.bsf_mAP_std = 0
         self.bsf_model = None
@@ -153,7 +157,9 @@ class Trainer():
     # training loop
     def _train(self):
         self.model.train()
-        self.train_loss_mean=[]
+        self.ken_loss_mean=[]
+        self.mse_loss_mean=[]
+        self.com_loss_mean=[]
         for data, label, segmentation, summaries, key , _, _  in tqdm(self.train_dataloader):
           data, label, segmentation, summaries, key, _ = utils.preprocess(data, label, segmentation, summaries, key)
           data = data[0].to(self.device), data[1].to(self.device)
@@ -171,21 +177,26 @@ class Trainer():
         #       continue
           comb_loss, kendall_loss, mse_loss = self.criterion(output, label)
           comb_loss.backward()
-          self.train_loss_mean.append(loss.cpu().detach().item())
+          self.ken_loss_mean.append(kendall_loss.cpu().detach().item())
+          self.mse_loss_mean.append(mse_loss.cpu().detach().item())
+          self.com_loss_mean.append(comb_loss.cpu().detach().item())
           self.optimizer.step()
            
-          self.losses.update(self.current_epoch, key, loss.cpu().detach().numpy())
-          tmp_dict = {'mse':loss.cpu().detach().item(), 'shot_scores':output[0].cpu().detach().numpy()}
+          self.training_com_losses.update(self.current_epoch, key, comb_loss.cpu().detach().numpy())
+          tmp_dict = {'loss': comb_loss.cpu().detach().item(),'mse':mse_loss.cpu().detach().item(), 'kendall_loss':kendall_loss.cpu().detach().item(),
+                       'shot_scores':output[0].cpu().detach().numpy()}
           self.epoch_training_table.update({key:tmp_dict})
         #   self.check_model_converge()
-        epoch_loss,_ = self.losses.get_current_status()
+        epoch_loss,_ = self.training_com_losses.get_current_status()
         return
 
 
     # validation loop
     def _validate(self):
         self.model.eval()
-        self.valid_loss_mean=[]
+        self.mse_loss_mean=[]
+        self.ken_loss_mean=[]
+        self.com_loss_mean=[]
         
         epoch_video_shot_score_dict = {}
         with torch.no_grad():
@@ -213,7 +224,7 @@ class Trainer():
                 kendall_shot, spearman_shot = utils.kendall_spearman(output, label_np)
 
                 attention_weights = attention_weights.cpu().numpy() # (number of downsampled frames x number of downsampled frames)
-                self.valid_loss_mean.append(loss.item())
+                self.com_loss_mean.append(comb_loss.item())
                 
                 if self.config.fixed_summary_length:
                     proportion = 0.15
@@ -237,9 +248,9 @@ class Trainer():
                 _, _, average_f1_score_greedy = utils.evaluate_summary(shot_summary_greedy, summaries, 'average')
 
                 average_score.append([max_f1_score_knapsack, average_f1_score_knapsack, max_f1_score_greedy, average_f1_score_greedy, 
-                                      kendall_coeff, spearman_coeff, kendall_shot, spearman_shot, mAP_score5, mAP_score15, loss.item()])
+                                      kendall_coeff, spearman_coeff, kendall_shot, spearman_shot, mAP_score5, mAP_score15, mse_loss.item()])
 
-                self.test_losses.update(self.current_epoch, key, loss.item())
+                self.testing_com_losses.update(self.current_epoch, key, comb_loss.item())
                 self.max_f1_scores_knapsack.update(self.current_epoch, key, max_f1_score_knapsack)
                 self.average_f1_scores_knapsack.update(self.current_epoch, key, average_f1_score_knapsack)
                 self.max_f1_scores_greedy.update(self.current_epoch, key, max_f1_score_greedy)
@@ -252,7 +263,8 @@ class Trainer():
                 tmp = {'max_f1_scores_knapsack': max_f1_score_knapsack, 'average_f1_scores_knapsack': average_f1_score_knapsack, 
                         'max_f1_scores_greedy': max_f1_score_greedy, 'average_f1_scores_greedy': average_f1_score_greedy,
                         'kendall': kendall_coeff, 'spearman': spearman_coeff, 'kendall_shot': kendall_shot, 'spearman_shot': spearman_shot,
-                        'mAP-5': mAP_score5, 'mAP-15': mAP_score15, 'mse': loss.item(), 'shot_scores':output}
+                        'mAP-5': mAP_score5, 'mAP-15': mAP_score15, 'mse': mse_loss.item(), 'kendall_loss': kendall_loss.item(),
+                        'loss':comb_loss.item(),'shot_scores':output}
                 self.epoch_result_table.update({key:tmp})                 
                 epoch_video_shot_score_dict.update({key: output})
         average_score = np.array(average_score)
@@ -296,8 +308,8 @@ class Trainer():
         # self.writer.add_scalar('Loss/validation',statistics.mean(self.valid_loss_mean), self.current_epoch)
  
         # self.scheduler.step(statistics.mean(self.train_loss_mean)) 
-        mean_loss,_ = self.losses.get_current_status()
-        mean_test_loss, is_min_test_loss_update = self.test_losses.get_current_status()
+        mean_loss,_ = self.training_com_losses.get_current_status()
+        mean_test_loss, is_min_test_loss_update = self.testing_com_losses.get_current_status()
 
         if self.model_converge == False:
             self.check_model_converge(mean_test_loss)
@@ -341,8 +353,7 @@ class Trainer():
         else:
             raise AttributeError(f'Unrecognize argument master_metric: {self.config.master_metric_update}')
 
-        epoch_dict = {'videos_result':self.epoch_result_table, 'training_loss': self.losses.get_epoch_mean(self.current_epoch),
-                       'training_video_result':self.epoch_training_table, 'converge_epoch':self.converge_epoch}
+        epoch_dict = {'videos_result':self.epoch_result_table,'training_video_result':self.epoch_training_table, 'converge_epoch':self.converge_epoch}
         self.result_table.update({f'Epoch_{self.current_epoch}':epoch_dict})
         if master_metric_update and self.model_converge:                        # When master metric is update and model is converge then save result
             self.video_shot_score_dict = tmp_video_shot_score_dict
@@ -360,7 +371,7 @@ class Trainer():
             self.bsf_kendall_std = kendall_std
             self.spearman_bsf_fscore = mean_spearman
             self.bsf_spearman_std = spearman_std
-            self.bsf_mse = mean_test_loss
+            self.bsf_loss = mean_test_loss
             self.bsf_mAP = mean_mAP
             self.bsf_mAP_std = mAP_std
             if self.best_checkpoint is not None:
@@ -374,14 +385,6 @@ class Trainer():
         
         save_path = f'{self.config.checkpoints_path}/losses_{self.split_index}.csv'
         save_path_valid = f'{self.config.checkpoints_path}/valid_losses_{self.split_index}.csv'
-        
-        # Plot Training and testing loss
-        training_loss = self.losses.get_epoch_means()
-        testing_loss = self.test_losses.get_epoch_means()
-        plt.figure()
-        plt.plot(training_loss, label='Training')
-        plt.plot(testing_loss, label='Testing')
-        plt.legend()
         
         if self.config.save_model:
             print("Model saved")
@@ -406,7 +409,7 @@ class Trainer():
             if len(epoch_video_shot_score_dict) == 0:
                 continue
             self._on_epoch_end(epoch_video_shot_score_dict)
-            if self.earlyStop.__call__(self.test_losses.get_current_status()[0]) and epoch > self.min_epochs:
+            if self.earlyStop.__call__(self.testing_com_losses.get_current_status()[0]) and epoch > self.min_epochs:
                 print("Stop training at epoch: {}".format(epoch))
                 break
         self._on_training_end()

@@ -1,0 +1,65 @@
+# environment
+device: 'cuda:0'
+seed: 777
+is_verbose: True
+
+split_file_path: '/home/misaki/Video_Summarization_Project/Simple_VSRAN/split_folder/0409_split.json'         # 這個
+
+# dataloader
+dataset_path: "/home/misaki/Video_Summarization_Project/Simple_VSRAN/datasets/tvsum_goo3DRes_shot_center_new.h5"
+dataset_name: "TvSum"                                       # TvSum, SumMe or CoSum.   For attribute report_text
+
+shot_repre: "center"                                        # center, uni, max_prob, mean. For attribute report_text
+batch_size: 1
+shuffle: True
+dataset_type: 'combine'
+eval_mode: "average"
+fixed_summary_length: True                            # True if 原影片長之15%, else 與Ground truth summary 等長
+master_metric: 'f1_score'                             # f1_score / mAP / kendall / MSE
+mAP_top: 5
+
+# h5 Attribute
+major_feature_name: 'major_features'
+minor_feature_name: 'minor_features'
+gt_name: 'gt_score'
+user_summaries_name: 'summaries'                      # summaries / greedy_summaries
+
+# optimizer
+learning_rate: 0.00001
+l2_regularization: 0.00001
+
+# Scheduler
+cool_down: 35
+patient: 3
+threshold: 0.01
+
+# Early Stop
+earlyStop_patient: 3
+earlyStop_delta: 0
+
+# trainer
+min_epochs: 100
+max_epochs: 200
+
+# model
+dimension_major: 2048
+dimension_minor: 1024
+dimension_hidden: 512
+dropout_rate: 0.5
+max_relative_distance: 5
+n_stacks: 1
+pe: 'spe'                                           # 'rpe'(Relative positional encoding) , 'spe'(static positional encoding) or "Nope"(No positional encoding)
+alpha: 0.01                                         # Combine loss = MSE loss - alpha*kendall loss
+
+# Save model 
+save_model: False
+save_model_path: "./save_model/{}/{}_split_{}.pth"
+
+# Key-shot selection Method, knapsack(Maximize total score) or greedy(Select the highest until full)
+key_shot_selection: "knapsack"      # knapsack or greedy
+
+# Report Text
+report_text: "{} Standard {} 3D Resnet & googleNet motion Feature with Combine loss"
+report_path: "./new_report/{}/0203_spe_{}_Std_{}_{}_goo3DRes.txt"   # Path to the report file (.txt and .pkl)
+score_dir: "./save_score"
+
